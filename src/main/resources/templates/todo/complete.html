@@ -19,6 +19,16 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <p class="mb-4">登録が完了しました。</p>
+            <dl class="row mb-4">
+                <dt class="col-sm-3">タイトル</dt>
+                <dd class="col-sm-9" th:text="${title}">サンプル</dd>
+
+                <dt class="col-sm-3">説明</dt>
+                <dd class="col-sm-9" th:text="${description}">説明</dd>
+
+                <dt class="col-sm-3">優先度</dt>
+                <dd class="col-sm-9" th:text="${priority}">3</dd>
+            </dl>
             <a class="btn btn-primary" th:href="@{/todos}">一覧へ戻る</a>
         </div>
     </div>

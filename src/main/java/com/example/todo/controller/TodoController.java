@@ -5,8 +5,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.todo.form.TodoForm;
 
@@ -42,7 +41,7 @@ public class TodoController {
 
     // Display the form to create a new todo.
     @GetMapping("/todos/new")
-    public String createForm(@ModelAttribute("todoForm") TodoForm todoForm) {
+    public String createForm() {
         return "todo/form";
     }
 
@@ -74,32 +73,32 @@ public class TodoController {
 
     // Receive form submission via POST and show a confirmation page.
     @PostMapping("/todos/confirm")
-    public String confirm(@ModelAttribute("todoForm") TodoForm todoForm,
-                          RedirectAttributes redirectAttributes) {
-        redirectAttributes.addFlashAttribute("todoForm", todoForm);
-        return "redirect:/todos/confirm";
-    }
-
-    // Show the confirmation page (data comes via RedirectAttributes).
-    @GetMapping("/todos/confirm")
-    public String showConfirm(@ModelAttribute("todoForm") TodoForm todoForm) {
+    public String confirm(@RequestParam("title") String title,
+                          @RequestParam(value = "description", required = false) String description,
+                          @RequestParam(value = "priority", defaultValue = "3") Integer priority,
+                          Model model) {
+        model.addAttribute("title", title);
+        model.addAttribute("description", description);
+        model.addAttribute("priority", priority);
         return "todo/confirm";
     }
 
     // Go back to the input screen while keeping the entered values.
     @PostMapping("/todos/back")
-    public String backToForm(@ModelAttribute("todoForm") TodoForm todoForm,
-                             RedirectAttributes redirectAttributes) {
-        redirectAttributes.addFlashAttribute("todoForm", todoForm);
+    public String backToForm() {
         return "redirect:/todos/new";
     }
 
     // Complete registration and show the completion page.
     @PostMapping("/todos/complete")
-    public String complete(@ModelAttribute("todoForm") TodoForm todoForm,
-                           RedirectAttributes redirectAttributes) {
-        redirectAttributes.addFlashAttribute("todoForm", todoForm);
-        return "redirect:/todos/complete";
+    public String complete(@RequestParam("title") String title,
+                           @RequestParam(value = "description", required = false) String description,
+                           @RequestParam(value = "priority", defaultValue = "3") Integer priority,
+                           Model model) {
+        model.addAttribute("title", title);
+        model.addAttribute("description", description);
+        model.addAttribute("priority", priority);
+        return "todo/complete";
     }
 
     @GetMapping("/todos/complete")
