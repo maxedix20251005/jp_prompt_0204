@@ -31,14 +31,16 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>サンプルToDo</td>
-                        <td><span class="badge text-bg-secondary">未完了</span></td>
+                    <tr th:each="todo : ${todos}">
+                        <td th:text="${todo.id}">1</td>
+                        <td th:text="${todo.title}">サンプルToDo</td>
+                        <td>
+                            <span class="badge text-bg-secondary" th:text="${todo.status}">未完了</span>
+                        </td>
                         <td class="text-end">
-                            <a class="btn btn-outline-secondary btn-sm" th:href="@{/todos/{id}(id=1)}">詳細</a>
-                            <a class="btn btn-outline-primary btn-sm" th:href="@{/todos/{id}/edit(id=1)}">編集</a>
-                            <a class="btn btn-outline-danger btn-sm" th:href="@{/todos/{id}/delete(id=1)}">削除</a>
+                            <a class="btn btn-outline-secondary btn-sm" th:href="@{/todos/{id}(id=${todo.id})}">詳細</a>
+                            <a class="btn btn-outline-primary btn-sm" th:href="@{/todos/{id}/edit(id=${todo.id})}">編集</a>
+                            <a class="btn btn-outline-danger btn-sm" th:href="@{/todos/{id}/delete(id=${todo.id})}">削除</a>
                         </td>
                     </tr>
                     </tbody>
