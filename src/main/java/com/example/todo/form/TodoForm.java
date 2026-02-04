@@ -12,22 +12,36 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * ToDo作成/編集に用いるフォームクラス。
+ *
+ * <p>バリデーションには {@code jakarta.validation} のアノテーションを使用します。</p>
+ *
+ * @author Codex
+ * @version 1.0
+ * @since 1.0
+ * @see com.example.todo.entity.Todo
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class TodoForm {
 
+    /** タイトル（必須、最大100文字）。 */
     @NotBlank(message = "タイトルは必須です。")
     @Size(max = 100, message = "タイトルは100文字以内で入力してください。")
     private String title;
 
+    /** 説明（任意、最大500文字）。 */
     @Size(max = 500, message = "説明は500文字以内で入力してください。")
     private String description;
 
+    /** 期限日（本日以降）。 */
     @NotNull(message = "期限日は必須です。")
     @FutureOrPresent(message = "期限日は本日以降の日付を指定してください。")
     private LocalDate dueDate;
 
+    /** 優先度（1〜5）。 */
     @NotNull(message = "優先度は必須です。")
     @Min(value = 1, message = "優先度は1以上で入力してください。")
     @Max(value = 5, message = "優先度は5以下で入力してください。")
