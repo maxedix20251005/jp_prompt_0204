@@ -17,6 +17,9 @@
 </header>
 
 <main class="container py-4">
+    <div class="alert alert-success" role="alert" th:if="${message}" th:text="${message}">
+        登録が完了しました。
+    </div>
     <div class="card shadow-sm">
         <div class="card-body">
             <h2 class="h5 mb-3">一覧</h2>
@@ -35,7 +38,8 @@
                         <td th:text="${todo.id}">1</td>
                         <td th:text="${todo.title}">サンプルToDo</td>
                         <td>
-                            <span class="badge text-bg-secondary" th:text="${todo.status}">未完了</span>
+                            <span class="badge text-bg-secondary"
+                                  th:text="${todo.completed} ? '完了' : '未完了'">未完了</span>
                         </td>
                         <td class="text-end">
                             <a class="btn btn-outline-secondary btn-sm" th:href="@{/todos/{id}(id=${todo.id})}">詳細</a>

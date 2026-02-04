@@ -35,7 +35,7 @@
                 <dd class="col-sm-9" th:text="${todo.priority}">3</dd>
 
                 <dt class="col-sm-3">状態</dt>
-                <dd class="col-sm-9" th:text="${todo.status}">未完了</dd>
+                <dd class="col-sm-9" th:text="${todo.completed} ? '完了' : '未完了'">未完了</dd>
             </dl>
             <div class="d-flex gap-2">
                 <a class="btn btn-outline-secondary" th:href="@{/todos}">一覧に戻る</a>
