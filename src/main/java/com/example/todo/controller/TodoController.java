@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import java.time.LocalDate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,6 +52,19 @@ public class TodoController {
     @GetMapping({"/todos", "/todos/"})
     public String list(Model model) {
         model.addAttribute("todos", todoService.findAllOrderByCreatedAtDesc());
+        return "todo/list";
+    }
+
+    /**
+     * 期限切れのToDo一覧（MyBatis）を表示します。
+     *
+     * @param model 画面表示に使用するモデル
+     * @return 一覧テンプレート名
+     */
+    @GetMapping("/todos/overdue")
+    public String overdue(Model model) {
+        model.addAttribute("todos", todoService.findOverdueByMyBatis(LocalDate.now()));
+        model.addAttribute("overdueMode", true);
         return "todo/list";
     }
 

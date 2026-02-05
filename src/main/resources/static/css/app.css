@@ -1,0 +1,58 @@
+/* App-specific styles layered on top of Bootstrap */
+
+.app-page {
+    background-color: #f8f9fa;
+}
+
+.app-header {
+    background-color: #fff;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.app-footer {
+    background-color: #fff;
+    border-top: 1px solid #dee2e6;
+}
+
+.app-container {
+    max-width: 960px;
+}
+
+.app-section {
+    padding: 1.5rem 0;
+}
+
+.app-card {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.06);
+}
+
+.app-card-body {
+    padding: 1.5rem;
+}
+
+.app-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.app-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.app-table-actions {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+}
+
+.todo-title.completed {
+    text-decoration: line-through;
+}

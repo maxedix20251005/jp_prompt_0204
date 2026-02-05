@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.todo.entity.Todo;
 import com.example.todo.form.TodoForm;
+import com.example.todo.mapper.TodoMapper;
 import com.example.todo.repository.TodoRepository;
 
 /**
@@ -23,9 +24,11 @@ import com.example.todo.repository.TodoRepository;
 public class TodoService implements TodoServiceUseCase {
 
     private final TodoRepository todoRepository;
+    private final TodoMapper todoMapper;
 
-    public TodoService(TodoRepository todoRepository) {
+    public TodoService(TodoRepository todoRepository, TodoMapper todoMapper) {
         this.todoRepository = todoRepository;
+        this.todoMapper = todoMapper;
     }
 
     /** {@inheritDoc} */
@@ -39,6 +42,16 @@ public class TodoService implements TodoServiceUseCase {
     @Override
     public List<Todo> findAllOrderByCreatedAtDesc() {
         return todoRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+    }
+
+    /**
+     * MyBatisで期限切れToDoを取得します。
+     *
+     * @param date 期限日（この日付以前が対象）
+     * @return 期限切れToDo一覧
+     */
+    public List<Todo> findOverdueByMyBatis(java.time.LocalDate date) {
+        return todoMapper.selectOverdue(date);
     }
 
     /** {@inheritDoc} */
