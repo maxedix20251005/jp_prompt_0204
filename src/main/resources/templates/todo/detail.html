@@ -25,7 +25,7 @@
                 <dt class="col-sm-3">タイトル</dt>
                 <dd class="col-sm-9" th:text="${todo.title}">サンプルToDo</dd>
 
-                <dt class="col-sm-3">説明</dt>
+                <dt class="col-sm-3">詳細</dt>
                 <dd class="col-sm-9" th:text="${todo.description}">詳細説明</dd>
 
                 <dt class="col-sm-3">期限日</dt>
@@ -36,6 +36,9 @@
 
                 <dt class="col-sm-3">状態</dt>
                 <dd class="col-sm-9" th:text="${todo.completed} ? '完了' : '未完了'">未完了</dd>
+
+                <dt class="col-sm-3">作成者</dt>
+                <dd class="col-sm-9" th:text="${todo.author}">作成者</dd>
             </dl>
             <div class="d-flex gap-2">
                 <a class="btn btn-outline-secondary" th:href="@{/todos}">一覧に戻る</a>

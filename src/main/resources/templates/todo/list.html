@@ -36,6 +36,7 @@
                         <th scope="col">説明</th>
                         <th scope="col">期限日</th>
                         <th scope="col">優先度</th>
+                        <th scope="col">作成者</th>
                         <th scope="col">完了</th>
                         <th scope="col" class="text-end">操作</th>
                     </tr>
@@ -57,6 +58,7 @@
                         <td>
                             <span th:text="${#strings.repeat('★', todo.priority != null ? todo.priority : 0)}">★★★</span>
                         </td>
+                        <td th:text="${todo.author}">作成者</td>
                         <td>
                             <span class="todo-completed text-success" th:if="${todo.completed}">✔</span>
                             <span class="todo-completed text-muted" th:unless="${todo.completed}">—</span>

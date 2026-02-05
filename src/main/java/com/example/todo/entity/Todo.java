@@ -50,6 +50,10 @@ public class Todo {
     @Column(nullable = false, length = 100)
     private String title;
 
+    /** 作成者（必須、最大50文字）。 */
+    @Column(nullable = false, length = 50)
+    private String author;
+
     /** 説明（任意、最大500文字）。 */
     @Column(length = 500)
     private String description;

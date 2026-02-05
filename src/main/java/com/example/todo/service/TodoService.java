@@ -75,6 +75,7 @@ public class TodoService implements TodoServiceUseCase {
         }
         todo.setTitle(form.getTitle());
         todo.setDescription(form.getDescription());
+        todo.setAuthor(form.getAuthor());
         todo.setDueDate(form.getDueDate());
         todo.setPriority(form.getPriority());
         return todoRepository.save(todo);
@@ -122,6 +123,7 @@ public class TodoService implements TodoServiceUseCase {
             throw new IllegalArgumentException("form must not be null");
         }
         return Todo.builder()
+                .author(form.getAuthor())
                 .title(form.getTitle())
                 .description(form.getDescription())
                 .dueDate(form.getDueDate())
@@ -141,6 +143,7 @@ public class TodoService implements TodoServiceUseCase {
             throw new IllegalArgumentException("todo must not be null");
         }
         return new TodoForm(
+                todo.getAuthor(),
                 todo.getTitle(),
                 todo.getDescription(),
                 todo.getDueDate(),

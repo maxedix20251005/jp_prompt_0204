@@ -2,6 +2,8 @@ package com.example.todo.controller;
 
 import java.util.Objects;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -11,7 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -46,9 +47,8 @@ public class TodoController {
      *
      * @param model 画面表示に使用するモデル
      * @return 一覧テンプレート名
-     * @throws org.springframework.dao.DataAccessException 取得に失敗した場合
      */
-    @GetMapping("/todos")
+    @GetMapping({"/todos", "/todos/"})
     public String list(Model model) {
         model.addAttribute("todos", todoService.findAllOrderByCreatedAtDesc());
         return "todo/list";
@@ -58,7 +58,6 @@ public class TodoController {
      * 新規作成フォームを表示します。
      *
      * @return 入力テンプレート名
-     * @throws IllegalStateException 画面生成に失敗した場合
      */
     @GetMapping("/todos/new")
     public String createForm() {
@@ -71,7 +70,6 @@ public class TodoController {
      * @param id ToDoのID
      * @param model 画面表示に使用するモデル
      * @return 詳細テンプレート名
-     * @throws org.springframework.dao.DataAccessException 取得に失敗した場合
      */
     @GetMapping("/todos/{id}")
     public String detail(@PathVariable("id") Long id, Model model) {
@@ -89,7 +87,6 @@ public class TodoController {
      * @param id ToDoのID
      * @param model 画面表示に使用するモデル
      * @return 編集テンプレート名
-     * @throws org.springframework.dao.DataAccessException 取得に失敗した場合
      */
     @GetMapping("/todos/{id}/edit")
     public String edit(@PathVariable("id") Long id, Model model) {
@@ -112,11 +109,10 @@ public class TodoController {
      * @param model 画面表示に使用するモデル
      * @param redirectAttributes フラッシュメッセージ用
      * @return 一覧へのリダイレクト、または編集画面
-     * @throws org.springframework.dao.DataAccessException 更新に失敗した場合
      */
     @PostMapping("/todos/{id}/update")
     public String update(@PathVariable("id") Long id,
-                         @Validated @ModelAttribute("todoForm") TodoForm todoForm,
+                         @Valid @ModelAttribute("todoForm") TodoForm todoForm,
                          BindingResult bindingResult,
                          Model model,
                          RedirectAttributes redirectAttributes) {
@@ -141,12 +137,18 @@ public class TodoController {
      * 入力内容を確認画面へ渡します。
      *
      * @param todoForm 入力フォーム
+     * @param bindingResult バリデーション結果
+     * @param model 画面表示に使用するモデル
      * @return 確認テンプレート名
-     * @throws IllegalArgumentException todoFormが{@code null}の場合
      */
     @PostMapping("/todos/confirm")
-    public String confirm(@ModelAttribute("todoForm") TodoForm todoForm) {
+    public String confirm(@Valid @ModelAttribute("todoForm") TodoForm todoForm,
+                          BindingResult bindingResult,
+                          Model model) {
         Objects.requireNonNull(todoForm, "todoForm must not be null");
+        if (bindingResult.hasErrors()) {
+            return "todo/form";
+        }
         return "todo/confirm";
     }
 
@@ -154,7 +156,6 @@ public class TodoController {
      * 入力画面へ戻ります。
      *
      * @return 入力画面へのリダイレクト
-     * @throws IllegalStateException 画面遷移に失敗した場合
      */
     @PostMapping("/todos/back")
     public String backToForm() {
@@ -167,8 +168,6 @@ public class TodoController {
      * @param todoForm 入力フォーム
      * @param redirectAttributes フラッシュメッセージ用
      * @return 一覧へのリダイレクト
-     * @throws IllegalArgumentException todoFormが{@code null}の場合
-     * @throws org.springframework.dao.DataAccessException 登録に失敗した場合
      */
     @PostMapping("/todos/complete")
     public String complete(@ModelAttribute("todoForm") TodoForm todoForm,
@@ -183,7 +182,6 @@ public class TodoController {
      * 完了画面を表示します。
      *
      * @return 完了テンプレート名
-     * @throws IllegalStateException 画面生成に失敗した場合
      */
     @GetMapping("/todos/complete")
     public String showComplete() {
@@ -196,7 +194,6 @@ public class TodoController {
      * @param id ToDoのID
      * @param redirectAttributes フラッシュメッセージ用
      * @return 一覧へのリダイレクト
-     * @throws jakarta.persistence.EntityNotFoundException 対象が存在しない場合
      */
     @PostMapping("/todos/{id}/delete")
     public String delete(@PathVariable("id") Long id,
@@ -215,6 +212,7 @@ public class TodoController {
      *
      * @param id ToDoのID
      * @param requestedWith Ajax判定用ヘッダ
+     * @param redirectAttributes フラッシュメッセージ用
      * @return Ajaxの場合はJSON、通常は一覧リダイレクト
      */
     @PostMapping("/todos/{id}/toggle")

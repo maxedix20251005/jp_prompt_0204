@@ -27,13 +27,18 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TodoForm {
 
+    /** 作成者（必須、最大50文字）。 */
+    @NotBlank(message = "作成者は必須です。")
+    @Size(max = 50, message = "作成者は50文字以内で入力してください。")
+    private String author;
+
     /** タイトル（必須、最大100文字）。 */
     @NotBlank(message = "タイトルは必須です。")
     @Size(max = 100, message = "タイトルは100文字以内で入力してください。")
     private String title;
 
-    /** 説明（任意、最大500文字）。 */
-    @Size(max = 500, message = "説明は500文字以内で入力してください。")
+    /** 詳細（任意、最大500文字）。 */
+    @Size(max = 500, message = "詳細は500文字以内で入力してください。")
     private String description;
 
     /** 期限日（本日以降）。 */
