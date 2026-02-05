@@ -42,4 +42,24 @@ public interface TodoServiceUseCase {
      * @throws org.springframework.dao.DataAccessException 取得に失敗した場合
      */
     Todo findById(Long id);
+
+    /**
+     * 指定IDのToDoを更新します。
+     *
+     * @param id ToDoのID
+     * @param form 入力フォーム
+     * @return 更新されたToDo
+     * @throws jakarta.persistence.EntityNotFoundException 対象が存在しない場合
+     * @throws jakarta.persistence.OptimisticLockException 楽観的ロックで競合した場合
+     */
+    Todo update(Long id, TodoForm form);
+
+    /**
+     * 完了状態を反転します。
+     *
+     * @param id ToDoのID
+     * @return 更新後のToDo
+     * @throws jakarta.persistence.EntityNotFoundException 対象が存在しない場合
+     */
+    Todo toggleCompleted(Long id);
 }

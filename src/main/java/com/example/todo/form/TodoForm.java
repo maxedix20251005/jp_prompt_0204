@@ -46,4 +46,7 @@ public class TodoForm {
     @Min(value = 1, message = "優先度は1以上で入力してください。")
     @Max(value = 5, message = "優先度は5以下で入力してください。")
     private Integer priority;
+
+    /** 楽観的ロック用バージョン。 */
+    private Long version;
 }

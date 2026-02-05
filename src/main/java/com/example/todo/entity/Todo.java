@@ -73,6 +73,10 @@ public class Todo {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    /** 楽観的ロック用バージョン。 */
+    @jakarta.persistence.Version
+    private Long version;
+
     /**
      * 作成時に日時とデフォルト値を設定します。
      *

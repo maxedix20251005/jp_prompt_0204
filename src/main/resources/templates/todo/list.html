@@ -41,8 +41,12 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="todo : ${todos}">
-                        <td th:text="${todo.title}">サンプルToDo</td>
+                    <tr th:each="todo : ${todos}" th:attr="data-id=${todo.id}">
+                        <td>
+                            <span class="todo-title"
+                                  th:text="${todo.title}"
+                                  th:classappend="${todo.completed} ? 'text-decoration-line-through' : ''">サンプルToDo</span>
+                        </td>
                         <td th:text="${todo.description}">説明</td>
                         <td>
                             <span th:text="${#temporals.format(todo.dueDate, 'yyyy/MM/dd')}"
@@ -54,12 +58,16 @@
                             <span th:text="${#strings.repeat('★', todo.priority != null ? todo.priority : 0)}">★★★</span>
                         </td>
                         <td>
-                            <span class="text-success" th:if="${todo.completed}">✔</span>
-                            <span class="text-muted" th:unless="${todo.completed}">—</span>
+                            <span class="todo-completed text-success" th:if="${todo.completed}">✔</span>
+                            <span class="todo-completed text-muted" th:unless="${todo.completed}">—</span>
                         </td>
                         <td class="text-end">
                             <a class="btn btn-outline-secondary btn-sm" th:href="@{/todos/{id}(id=${todo.id})}">詳細</a>
                             <a class="btn btn-outline-primary btn-sm" th:href="@{/todos/{id}/edit(id=${todo.id})}">編集</a>
+                            <form th:action="@{/todos/{id}/toggle(id=${todo.id})}" method="post"
+                                  class="d-inline todo-toggle-form" data-ajax="true">
+                                <button class="btn btn-outline-success btn-sm" type="submit">切替</button>
+                            </form>
                             <form th:action="@{/todos/{id}/delete(id=${todo.id})}" method="post" class="d-inline"
                                   onsubmit="return confirm('本当に削除しますか？');">
                                 <button class="btn btn-outline-danger btn-sm" type="submit">削除</button>
@@ -89,6 +97,39 @@
             alert.classList.add('hide');
         });
     }, 3000);
+</script>
+<script>
+    document.querySelectorAll('.todo-toggle-form[data-ajax="true"]').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            fetch(form.action, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(function (res) {
+                if (!res.ok) {
+                    throw new Error('toggle failed');
+                }
+                return res.json();
+            }).then(function (data) {
+                var row = form.closest('tr');
+                var title = row.querySelector('.todo-title');
+                var status = row.querySelector('.todo-completed');
+                if (data.completed) {
+                    title.classList.add('text-decoration-line-through');
+                    status.classList.remove('text-muted');
+                    status.classList.add('text-success');
+                    status.textContent = '✔';
+                } else {
+                    title.classList.remove('text-decoration-line-through');
+                    status.classList.remove('text-success');
+                    status.classList.add('text-muted');
+                    status.textContent = '—';
+                }
+            }).catch(function () {
+                alert('更新に失敗しました');
+            });
+        });
+    });
 </script>
 </body>
 </html>

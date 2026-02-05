@@ -2,12 +2,18 @@ package com.example.todo.controller;
 
 import java.util.Objects;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.todo.entity.Todo;
@@ -87,12 +93,48 @@ public class TodoController {
      */
     @GetMapping("/todos/{id}/edit")
     public String edit(@PathVariable("id") Long id, Model model) {
-        Todo todo = todoService.findById(id);
-        if (todo == null) {
-            return "redirect:/todos";
+        try {
+            TodoForm form = todoService.findFormById(id);
+            model.addAttribute("todoForm", form);
+            model.addAttribute("todoId", id);
+            return "todo/edit";
+        } catch (jakarta.persistence.EntityNotFoundException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Todo not found", ex);
         }
-        model.addAttribute("todo", todo);
-        return "todo/edit";
+    }
+
+    /**
+     * 更新処理を実行します。
+     *
+     * @param id ToDoのID
+     * @param todoForm 入力フォーム
+     * @param bindingResult バリデーション結果
+     * @param model 画面表示に使用するモデル
+     * @param redirectAttributes フラッシュメッセージ用
+     * @return 一覧へのリダイレクト、または編集画面
+     * @throws org.springframework.dao.DataAccessException 更新に失敗した場合
+     */
+    @PostMapping("/todos/{id}/update")
+    public String update(@PathVariable("id") Long id,
+                         @Validated @ModelAttribute("todoForm") TodoForm todoForm,
+                         BindingResult bindingResult,
+                         Model model,
+                         RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("todoId", id);
+            return "todo/edit";
+        }
+        try {
+            todoService.update(id, todoForm);
+        } catch (jakarta.persistence.EntityNotFoundException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Todo not found", ex);
+        } catch (jakarta.persistence.OptimisticLockException ex) {
+            bindingResult.reject("optimisticLock", "他のユーザーにより更新されました。再度お試しください。");
+            model.addAttribute("todoId", id);
+            return "todo/edit";
+        }
+        redirectAttributes.addFlashAttribute("successMessage", "更新が完了しました");
+        return "redirect:/todos";
     }
 
     /**
@@ -167,5 +209,36 @@ public class TodoController {
         }
         return "redirect:/todos";
     }
+
+    /**
+     * 完了状態を反転します（同期/非同期両対応）。
+     *
+     * @param id ToDoのID
+     * @param requestedWith Ajax判定用ヘッダ
+     * @return Ajaxの場合はJSON、通常は一覧リダイレクト
+     */
+    @PostMapping("/todos/{id}/toggle")
+    public Object toggle(@PathVariable("id") Long id,
+                         @RequestHeader(value = "X-Requested-With", required = false) String requestedWith,
+                         RedirectAttributes redirectAttributes) {
+        boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(requestedWith);
+        try {
+            Todo updated = todoService.toggleCompleted(id);
+            if (isAjax) {
+                return ResponseEntity.ok().body(new ToggleResponse(updated.getId(), updated.getCompleted()));
+            }
+            redirectAttributes.addFlashAttribute("successMessage", "完了状態を更新しました");
+            return "redirect:/todos";
+        } catch (jakarta.persistence.EntityNotFoundException ex) {
+            if (isAjax) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ToggleResponse(id, null));
+            }
+            redirectAttributes.addFlashAttribute("errorMessage", "更新に失敗しました");
+            return "redirect:/todos";
+        }
+    }
+
+    /** Ajax用レスポンス。 */
+    public record ToggleResponse(Long id, Boolean completed) { }
 
 }

@@ -25,6 +25,9 @@
                 <dt class="col-sm-3">説明</dt>
                 <dd class="col-sm-9" th:text="${todoForm.description}">説明</dd>
 
+                <dt class="col-sm-3">期限日</dt>
+                <dd class="col-sm-9" th:text="${#temporals.format(todoForm.dueDate, 'yyyy/MM/dd')}">2026/02/04</dd>
+
                 <dt class="col-sm-3">優先度</dt>
                 <dd class="col-sm-9" th:text="${todoForm.priority}">3</dd>
             </dl>
@@ -32,6 +35,7 @@
             <form th:action="@{/todos/complete}" th:object="${todoForm}" method="post" class="d-flex gap-2">
                 <input type="hidden" th:field="*{title}" />
                 <input type="hidden" th:field="*{description}" />
+                <input type="hidden" th:field="*{dueDate}" />
                 <input type="hidden" th:field="*{priority}" />
                 <button class="btn btn-outline-secondary" type="button" onclick="history.back()">戻る</button>
                 <button class="btn btn-primary" type="submit">登録</button>

@@ -9,7 +9,6 @@ import com.example.todo.entity.Todo;
 import com.example.todo.form.TodoForm;
 import com.example.todo.repository.TodoRepository;
 
-@Service
 /**
  * ToDoのビジネスロジックを提供するサービス。
  *
@@ -20,6 +19,7 @@ import com.example.todo.repository.TodoRepository;
  * @since 1.0
  * @see TodoServiceUseCase
  */
+@Service
 public class TodoService implements TodoServiceUseCase {
 
     private final TodoRepository todoRepository;
@@ -45,6 +45,52 @@ public class TodoService implements TodoServiceUseCase {
     @Override
     public Todo findById(Long id) {
         return todoRepository.findById(id).orElse(null);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Todo toggleCompleted(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("id must not be null");
+        }
+        Todo todo = todoRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Todo not found: " + id));
+        todo.setCompleted(!Boolean.TRUE.equals(todo.getCompleted()));
+        return todoRepository.save(todo);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Todo update(Long id, TodoForm form) {
+        if (id == null) {
+            throw new IllegalArgumentException("id must not be null");
+        }
+        if (form == null) {
+            throw new IllegalArgumentException("form must not be null");
+        }
+        Todo todo = todoRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Todo not found: " + id));
+        if (form.getVersion() != null && !form.getVersion().equals(todo.getVersion())) {
+            throw new jakarta.persistence.OptimisticLockException("Todo was updated by another transaction");
+        }
+        todo.setTitle(form.getTitle());
+        todo.setDescription(form.getDescription());
+        todo.setDueDate(form.getDueDate());
+        todo.setPriority(form.getPriority());
+        return todoRepository.save(todo);
+    }
+
+    /**
+     * ID指定でフォーム用データを取得します。
+     *
+     * @param id ToDoのID
+     * @return フォームオブジェクト
+     * @throws jakarta.persistence.EntityNotFoundException 対象が存在しない場合
+     */
+    public TodoForm findFormById(Long id) {
+        Todo todo = todoRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Todo not found: " + id));
+        return toForm(todo);
     }
 
     /**
@@ -81,5 +127,25 @@ public class TodoService implements TodoServiceUseCase {
                 .dueDate(form.getDueDate())
                 .priority(form.getPriority())
                 .build();
+    }
+
+    /**
+     * エンティティからフォームへ変換します。
+     *
+     * @param todo エンティティ
+     * @return 変換されたフォーム
+     * @throws IllegalArgumentException todoが{@code null}の場合
+     */
+    private TodoForm toForm(Todo todo) {
+        if (todo == null) {
+            throw new IllegalArgumentException("todo must not be null");
+        }
+        return new TodoForm(
+                todo.getTitle(),
+                todo.getDescription(),
+                todo.getDueDate(),
+                todo.getPriority(),
+                todo.getVersion()
+        );
     }
 }
