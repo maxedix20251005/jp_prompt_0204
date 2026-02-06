@@ -62,4 +62,12 @@ public interface TodoServiceUseCase {
      * @throws jakarta.persistence.EntityNotFoundException 対象が存在しない場合
      */
     Todo toggleCompleted(Long id);
+
+    /**
+     * 複数IDを一括削除します。
+     *
+     * @param ids ToDoのIDリスト
+     * @return 削除件数
+     */
+    int deleteByIds(List<Long> ids);
 }

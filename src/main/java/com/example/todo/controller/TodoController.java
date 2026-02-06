@@ -1,24 +1,29 @@
 package com.example.todo.controller;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import jakarta.validation.Valid;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.web.bind.annotation.RequestParam;
-import java.time.LocalDate;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -26,18 +31,6 @@ import com.example.todo.entity.Todo;
 import com.example.todo.form.TodoForm;
 import com.example.todo.service.TodoService;
 
-/**
- * ToDoに関する画面遷移を提供するコントローラ。
- *
- * <p>主なエンドポイントは {@link #list(Model)} を起点とします。</p>
- *
- * <p>HTMLの例: {@code <a th:href="@{/todos}">}</p>
- *
- * @author Codex
- * @version 1.0
- * @since 1.0
- * @see TodoService
- */
 @Controller
 public class TodoController {
 
@@ -47,15 +40,9 @@ public class TodoController {
         this.todoService = todoService;
     }
 
-    /**
-     * 一覧画面を表示します。
-     *
-     * @param model 画面表示に使用するモデル
-     * @return 一覧テンプレート名
-     */
     @GetMapping({"/todos", "/todos/"})
     public String list(@PageableDefault(size = 10) Pageable pageable,
-                       @RequestParam(required = false) java.util.Map<String, String> params,
+                       @RequestParam(required = false) Map<String, String> params,
                        @RequestParam(required = false) String sort,
                        @RequestParam(required = false) String dir,
                        Model model) {
@@ -74,15 +61,26 @@ public class TodoController {
         return "redirect:/todos";
     }
 
-    /**
-     * 期限切れのToDo一覧（MyBatis）を表示します。
-     *
-     * @param model 画面表示に使用するモデル
-     * @return 一覧テンプレート名
-     */
+    @GetMapping({"/todo/export", "/todos/export"})
+    public ResponseEntity<byte[]> exportCsv() {
+        List<Todo> todos = todoService.findAllOrderByCreatedAtDesc();
+        String csv = buildCsv(todos);
+        byte[] bom = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+        byte[] body = csv.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] out = new byte[bom.length + body.length];
+        System.arraycopy(bom, 0, out, 0, bom.length);
+        System.arraycopy(body, 0, out, bom.length, body.length);
+
+        String filename = "todo_" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + ".csv";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(new MediaType("text", "csv"));
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");
+        return new ResponseEntity<>(out, headers, HttpStatus.OK);
+    }
+
     @GetMapping("/todos/overdue")
     public String overdue(@PageableDefault(size = 10) Pageable pageable,
-                          @RequestParam(required = false) java.util.Map<String, String> params,
+                          @RequestParam(required = false) Map<String, String> params,
                           @RequestParam(required = false) String sort,
                           @RequestParam(required = false) String dir,
                           Model model) {
@@ -96,48 +94,11 @@ public class TodoController {
         return "todo/list";
     }
 
-    private void applyPagingModel(Model model, Page<Todo> page, Pageable pageable) {
-        model.addAttribute("page", page);
-        model.addAttribute("currentPage", page.getNumber());
-        model.addAttribute("totalPages", page.getTotalPages());
-        long total = page.getTotalElements();
-        long start = total == 0 ? 0 : pageable.getOffset() + 1;
-        long end = Math.min(pageable.getOffset() + page.getNumberOfElements(), total);
-        model.addAttribute("totalElements", total);
-        model.addAttribute("rangeStart", start);
-        model.addAttribute("rangeEnd", end);
-        model.addAttribute("pageSize", pageable.getPageSize());
-    }
-
-    private java.util.Map<String, String> sanitizeQueryParams(java.util.Map<String, String> params) {
-        if (params == null || params.isEmpty()) {
-            return java.util.Collections.emptyMap();
-        }
-        java.util.Map<String, String> cleaned = new java.util.LinkedHashMap<>(params);
-        cleaned.remove("page");
-        cleaned.remove("size");
-        cleaned.remove("sort");
-        cleaned.remove("dir");
-        return cleaned;
-    }
-
-    /**
-     * 新規作成フォームを表示します。
-     *
-     * @return 入力テンプレート名
-     */
     @GetMapping("/todos/new")
     public String createForm() {
         return "todo/form";
     }
 
-    /**
-     * 詳細画面を表示します。
-     *
-     * @param id ToDoのID
-     * @param model 画面表示に使用するモデル
-     * @return 詳細テンプレート名
-     */
     @GetMapping("/todos/{id}")
     public String detail(@PathVariable("id") Long id, Model model) {
         Todo todo = todoService.findById(id);
@@ -148,13 +109,6 @@ public class TodoController {
         return "todo/detail";
     }
 
-    /**
-     * 編集画面を表示します。
-     *
-     * @param id ToDoのID
-     * @param model 画面表示に使用するモデル
-     * @return 編集テンプレート名
-     */
     @GetMapping("/todos/{id}/edit")
     public String edit(@PathVariable("id") Long id, Model model) {
         try {
@@ -167,16 +121,6 @@ public class TodoController {
         }
     }
 
-    /**
-     * 更新処理を実行します。
-     *
-     * @param id ToDoのID
-     * @param todoForm 入力フォーム
-     * @param bindingResult バリデーション結果
-     * @param model 画面表示に使用するモデル
-     * @param redirectAttributes フラッシュメッセージ用
-     * @return 一覧へのリダイレクト、または編集画面
-     */
     @PostMapping("/todos/{id}/update")
     public String update(@PathVariable("id") Long id,
                          @Valid @ModelAttribute("todoForm") TodoForm todoForm,
@@ -192,7 +136,7 @@ public class TodoController {
         } catch (jakarta.persistence.EntityNotFoundException ex) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Todo not found", ex);
         } catch (jakarta.persistence.OptimisticLockException ex) {
-            bindingResult.reject("optimisticLock", "他のユーザーにより更新されました。再度お試しください。");
+            bindingResult.reject("optimisticLock", "他のユーザーにより更新されました。再読み込みしてください。");
             model.addAttribute("todoId", id);
             return "todo/edit";
         }
@@ -200,14 +144,6 @@ public class TodoController {
         return "redirect:/todos";
     }
 
-    /**
-     * 入力内容を確認画面へ渡します。
-     *
-     * @param todoForm 入力フォーム
-     * @param bindingResult バリデーション結果
-     * @param model 画面表示に使用するモデル
-     * @return 確認テンプレート名
-     */
     @PostMapping("/todos/confirm")
     public String confirm(@Valid @ModelAttribute("todoForm") TodoForm todoForm,
                           BindingResult bindingResult,
@@ -219,23 +155,11 @@ public class TodoController {
         return "todo/confirm";
     }
 
-    /**
-     * 入力画面へ戻ります。
-     *
-     * @return 入力画面へのリダイレクト
-     */
     @PostMapping("/todos/back")
     public String backToForm() {
         return "redirect:/todos/new";
     }
 
-    /**
-     * 登録処理を実行し一覧へリダイレクトします。
-     *
-     * @param todoForm 入力フォーム
-     * @param redirectAttributes フラッシュメッセージ用
-     * @return 一覧へのリダイレクト
-     */
     @PostMapping("/todos/complete")
     public String complete(@ModelAttribute("todoForm") TodoForm todoForm,
                            RedirectAttributes redirectAttributes) {
@@ -245,23 +169,11 @@ public class TodoController {
         return "redirect:/todos";
     }
 
-    /**
-     * 完了画面を表示します。
-     *
-     * @return 完了テンプレート名
-     */
     @GetMapping("/todos/complete")
     public String showComplete() {
         return "todo/complete";
     }
 
-    /**
-     * 指定IDのToDoを削除します。
-     *
-     * @param id ToDoのID
-     * @param redirectAttributes フラッシュメッセージ用
-     * @return 一覧へのリダイレクト
-     */
     @PostMapping("/todos/{id}/delete")
     public String delete(@PathVariable("id") Long id,
                          RedirectAttributes redirectAttributes) {
@@ -274,14 +186,18 @@ public class TodoController {
         return "redirect:/todos";
     }
 
-    /**
-     * 完了状態を反転します（同期/非同期両対応）。
-     *
-     * @param id ToDoのID
-     * @param requestedWith Ajax判定用ヘッダ
-     * @param redirectAttributes フラッシュメッセージ用
-     * @return Ajaxの場合はJSON、通常は一覧リダイレクト
-     */
+    @PostMapping("/todos/bulk-delete")
+    public String bulkDelete(@RequestParam(name = "ids", required = false) List<Long> ids,
+                             RedirectAttributes redirectAttributes) {
+        if (ids == null || ids.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "削除する項目を選択してください");
+            return "redirect:/todos";
+        }
+        int deleted = todoService.deleteByIds(ids);
+        redirectAttributes.addFlashAttribute("successMessage", "選択した項目を削除しました（" + deleted + "件）");
+        return "redirect:/todos";
+    }
+
     @PostMapping("/todos/{id}/toggle")
     public Object toggle(@PathVariable("id") Long id,
                          @RequestHeader(value = "X-Requested-With", required = false) String requestedWith,
@@ -303,7 +219,59 @@ public class TodoController {
         }
     }
 
-    /** Ajax用レスポンス。 */
-    public record ToggleResponse(Long id, Boolean completed) { }
+    private void applyPagingModel(Model model, Page<Todo> page, Pageable pageable) {
+        model.addAttribute("page", page);
+        model.addAttribute("currentPage", page.getNumber());
+        model.addAttribute("totalPages", page.getTotalPages());
+        long total = page.getTotalElements();
+        long start = total == 0 ? 0 : pageable.getOffset() + 1;
+        long end = Math.min(pageable.getOffset() + page.getNumberOfElements(), total);
+        model.addAttribute("totalElements", total);
+        model.addAttribute("rangeStart", start);
+        model.addAttribute("rangeEnd", end);
+        model.addAttribute("pageSize", pageable.getPageSize());
+    }
 
+    private Map<String, String> sanitizeQueryParams(Map<String, String> params) {
+        if (params == null || params.isEmpty()) {
+            return java.util.Collections.emptyMap();
+        }
+        Map<String, String> cleaned = new java.util.LinkedHashMap<>(params);
+        cleaned.remove("page");
+        cleaned.remove("size");
+        cleaned.remove("sort");
+        cleaned.remove("dir");
+        return cleaned;
+    }
+
+    private String buildCsv(List<Todo> todos) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("ID,タイトル,登録者,ステータス,作成日\n");
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
+        for (Todo todo : todos) {
+            String status = Boolean.TRUE.equals(todo.getCompleted()) ? "完了" : "未完了";
+            sb.append(escapeCsv(String.valueOf(todo.getId()))).append(",");
+            sb.append(escapeCsv(nullToEmpty(todo.getTitle()))).append(",");
+            sb.append(escapeCsv(nullToEmpty(todo.getAuthor()))).append(",");
+            sb.append(escapeCsv(status)).append(",");
+            sb.append(escapeCsv(todo.getCreatedAt() == null ? "" : todo.getCreatedAt().format(fmt)));
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
+    private String escapeCsv(String value) {
+        if (value == null) {
+            return "";
+        }
+        boolean needsQuote = value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains("\r");
+        String escaped = value.replace("\"", "\"\"");
+        return needsQuote ? "\"" + escaped + "\"" : escaped;
+    }
+
+    private String nullToEmpty(String value) {
+        return value == null ? "" : value;
+    }
+
+    public record ToggleResponse(Long id, Boolean completed) { }
 }

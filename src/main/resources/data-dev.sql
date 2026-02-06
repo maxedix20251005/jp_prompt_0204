@@ -15,3 +15,7 @@ VALUES
   ('清水', 'ログ設定', 'SQLログの出力レベルを調整', DATE '2026-02-18', 3, FALSE, TIMESTAMP '2026-02-05 09:12:00', TIMESTAMP '2026-02-05 09:12:00', 0),
   ('林', '例外ハンドリング整理', '404/500の画面表示方針を検討', DATE '2026-02-19', 4, FALSE, TIMESTAMP '2026-02-05 09:13:00', TIMESTAMP '2026-02-05 09:13:00', 0),
   ('斎藤', 'リリースノート作成', '更新機能の変更点を記載', DATE '2026-02-20', 5, TRUE,  TIMESTAMP '2026-02-05 09:14:00', TIMESTAMP '2026-02-05 09:14:00', 0);
+
+INSERT INTO users (username, password, role)
+VALUES ('admin', '.HH9KpGgIuRrI8bXH/F1C5jY9E8uDZu', 'ROLE_USER');
+

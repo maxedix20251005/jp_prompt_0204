@@ -199,6 +199,14 @@ public class TodoService implements TodoServiceUseCase {
         todoRepository.deleteById(id);
     }
 
+    @Override
+    public int deleteByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+        return todoMapper.deleteByIds(ids);
+    }
+
     /**
      * フォームからエンティティへ変換します。
      *

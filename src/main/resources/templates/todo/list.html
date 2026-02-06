@@ -17,6 +17,7 @@
             TO DO LIST
         </h1>
         <div class="app-actions">
+            <a class="btn btn-outline-secondary" th:href="@{/todos/export}">CSVダウンロード</a>
             <a class="btn btn-outline-secondary"
                th:if="${overdueMode}"
                th:href="@{/todos(${queryParams},page=0,size=${pageSize},sort=${sort},dir=${dir})}">一覧</a>
@@ -24,6 +25,9 @@
                th:if="${!overdueMode}"
                th:href="@{/todos/overdue(${queryParams},page=0,size=${pageSize},sort=${sort},dir=${dir})}">期限切れ</a>
             <a class="btn btn-primary" th:href="@{/todos/new}">+ 新規作成</a>
+            <form th:action="@{/logout}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-secondary">ログアウト</button>
+            </form>
         </div>
     </div>
 </header>
@@ -64,10 +68,20 @@
                 <span th:text="${rangeStart}">0</span>-<span th:text="${rangeEnd}">0</span>件を表示
             </p>
 
-            <div class="table-responsive">
-                <table class="table table-striped align-middle mb-0">
+            <form id="bulkDeleteForm" th:action="@{/todos/bulk-delete}" method="post"
+                  onsubmit="return confirm('本当に削除しますか？');">
+                <div class="d-flex justify-content-end mb-2">
+                    <button type="submit" id="bulkDeleteBtn" class="btn btn-outline-danger btn-sm" disabled>
+                        選択した項目を削除
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
                     <thead>
                     <tr>
+                        <th scope="col" class="text-center">
+                            <input type="checkbox" id="selectAll" />
+                        </th>
                         <th scope="col" class="text-center app-col-title">
                             <a class="text-decoration-none text-body app-sort-link"
                                th:classappend="${sort == 'title'} ? (dir == 'asc' ? 'app-sort-asc app-sort-active' : 'app-sort-desc app-sort-active') : ''"
@@ -111,6 +125,9 @@
                     <tr th:each="todo : ${todos}"
                         th:attr="data-id=${todo.id}"
                         th:classappend="${todo.overdue} ? 'overdue-row' : (${todo.nearDeadline} ? 'warning-row' : '')">
+                        <td class="text-center">
+                            <input type="checkbox" name="ids" class="todo-select" th:value="${todo.id}" />
+                        </td>
                         <td>
                             <span class="todo-title"
                                   th:text="${todo.title}"
@@ -147,8 +164,9 @@
                         </td>
                     </tr>
                     </tbody>
-                </table>
-            </div>
+                    </table>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -228,6 +246,44 @@
             });
         });
     });
+</script>
+<script>
+    (function () {
+        var selectAll = document.getElementById('selectAll');
+        var bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        if (!selectAll) {
+            return;
+        }
+        var checkboxes = document.querySelectorAll('.todo-select');
+
+        function updateSelectAll() {
+            var allChecked = true;
+            var anyChecked = false;
+            checkboxes.forEach(function (cb) {
+                if (!cb.checked) {
+                    allChecked = false;
+                } else {
+                    anyChecked = true;
+                }
+            });
+            selectAll.checked = allChecked && checkboxes.length > 0;
+            if (bulkDeleteBtn) {
+                bulkDeleteBtn.disabled = !anyChecked;
+            }
+        }
+
+        selectAll.addEventListener('change', function () {
+            checkboxes.forEach(function (cb) {
+                cb.checked = selectAll.checked;
+            });
+        });
+
+        checkboxes.forEach(function (cb) {
+            cb.addEventListener('change', updateSelectAll);
+        });
+
+        updateSelectAll();
+    })();
 </script>
 </body>
 </html>

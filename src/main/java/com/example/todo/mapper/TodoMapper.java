@@ -27,4 +27,6 @@ public interface TodoMapper {
     long countOverdue(@Param("date") LocalDate date);
 
     List<Todo> selectOverdue(@Param("date") LocalDate date);
+
+    int deleteByIds(@Param("ids") List<Long> ids);
 }
