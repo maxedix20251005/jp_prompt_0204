@@ -1,0 +1,197 @@
+﻿DATA GUIDE / データガイド
+
+[EN]
+Overview:
+This document describes the data model, seed data, and CSV export for the ToDo app.
+
+Stores:
+- Dev: H2 in-memory (ephemeral)
+- Prod: MySQL (persistent)
+
+Tables:
+- todos: id, author, title, description, due_date, priority, completed, created_at, updated_at, version
+- users: id, username, password(BCrypt), role
+
+Seed:
+- Dev: data-dev.sql, data-dev-users.sql
+- Default dev login: max / password
+
+CSV Export:
+- GET /todos/export
+- Columns: ID, Title, Author, Status, CreatedAt
+- UTF-8 BOM for Excel
+
+[JP]
+概要:
+本資料はToDoアプリのデータモデル、初期データ、CSV出力を説明します。
+
+データストア:
+- 開発: H2 (メモリ)
+- 本番: MySQL (永続)
+
+テーブル:
+- todos: id, author, title, description, due_date, priority, completed, created_at, updated_at, version
+- users: id, username, password(BCrypt), role
+
+初期データ:
+- 開発: data-dev.sql, data-dev-users.sql
+- 既定のログイン: max / password
+
+CSV出力:
+- GET /todos/export
+- 項目: ID, タイトル, 登録者, ステータス, 作成日
+- Excel対応のUTF-8 BOM付き
+
+
+DEPLOYMENT INSTRUCTION / 配備手順
+
+[EN]
+Prereqs: Java 17+, Maven/MVN wrapper, MySQL for prod
+Build: ./mvnw.cmd -q -DskipTests package
+Run dev: ./run-dev.ps1
+Run prod: ./run-prod.ps1
+Prod DB:
+CREATE DATABASE tododb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+[JP]
+前提: Java17+, Maven/MVNラッパー, 本番はMySQL
+ビルド: ./mvnw.cmd -q -DskipTests package
+開発起動: ./run-dev.ps1
+本番起動: ./run-prod.ps1
+本番DB:
+CREATE DATABASE tododb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+
+LIMITATIONS / 制限事項
+
+[EN]
+- No role-based authorization beyond login
+- No password reset UI
+- CSV export is unfiltered (exports all)
+- Dev data resets on restart
+
+[JP]
+- ロール分離は未実装（ログインのみ）
+- パスワード再設定UIなし
+- CSVは常に全件出力
+- 開発環境は再起動でデータ消失
+
+
+RELEASE NOTES / リリースノート
+
+[EN]
+- CRUD, paging, sorting, CSV export, bulk delete
+- Overdue/near-deadline highlight
+- Spring Security login
+
+[JP]
+- CRUD、ページング、ソート、CSV、バルク削除
+- 期限切れ/期限近い行の強調
+- Spring Securityログイン
+
+
+SECURITY & PRIVACY / セキュリティ・プライバシー
+
+[EN]
+- BCrypt hashed passwords
+- Form login (Spring Security)
+- Replace default credentials in production
+
+[JP]
+- パスワードはBCryptハッシュ
+- Spring Securityフォーム認証
+- 本番では既定ID/パスワード変更推奨
+
+
+USER MANUAL / ユーザーマニュアル
+
+[EN]
+Login: /login → enter credentials
+List: /todos
+Create: + New
+Edit/Delete: per row
+Bulk delete: select rows → delete
+CSV: CSV download button
+Logout: header button
+
+[JP]
+ログイン: /login
+一覧: /todos
+作成: + 新規作成
+編集/削除: 行操作
+一括削除: チェック→削除
+CSV: CSVダウンロード
+ログアウト: ヘッダー
+
+
+TECHNICAL OVERVIEW / 技術概要
+
+[EN]
+- Spring Boot 3.x, Thymeleaf, JPA + MyBatis
+- Security: Spring Security 6
+- DB: H2(dev), MySQL(prod)
+
+[JP]
+- Spring Boot 3.x, Thymeleaf, JPA + MyBatis
+- Security: Spring Security 6
+- DB: H2(開発), MySQL(本番)
+
+
+TEST SCENARIO / テストシナリオ
+
+[EN]
+- Login success/fail
+- CRUD
+- Paging & sorting
+- Overdue highlight
+- CSV export
+
+[JP]
+- ログイン成否
+- CRUD
+- ページング・ソート
+- 期限切れ表示
+- CSV出力
+
+
+TEST CASES / テストケース
+
+[EN]
+- TC-LOGIN-001: valid login → ok
+- TC-CRUD-001: create → visible
+- TC-EXPORT-001: CSV download → ok
+
+[JP]
+- TC-LOGIN-001: 正常ログイン
+- TC-CRUD-001: 作成が一覧に反映
+- TC-EXPORT-001: CSVがダウンロードされる
+
+
+TEST CHECKLIST / テストチェックリスト
+
+[EN]
+- [ ] Login OK
+- [ ] CRUD OK
+- [ ] Paging OK
+- [ ] Sorting OK
+- [ ] CSV OK
+
+[JP]
+- [ ] ログイン
+- [ ] CRUD
+- [ ] ページング
+- [ ] ソート
+- [ ] CSV
+
+
+TROUBLESHOOTING / トラブルシューティング
+
+[EN]
+- Login fails: ensure user exists (max/password)
+- CSV fails: check /todos/export
+- CSS not updating: hard refresh
+
+[JP]
+- ログイン不可: ユーザー確認(max/password)
+- CSV: /todos/export確認
+- CSS反映なし: 強制再読み込み
