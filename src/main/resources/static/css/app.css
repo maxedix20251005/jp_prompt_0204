@@ -39,6 +39,13 @@
     margin: 0;
 }
 
+.app-list-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    text-align: center;
+}
+
 .app-actions {
     display: flex;
     gap: 0.5rem;
@@ -55,4 +62,31 @@
 
 .todo-title.completed {
     text-decoration: line-through;
+}
+
+.app-sort-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+}
+
+.app-col-due,
+.app-col-author,
+.app-col-status {
+    white-space: nowrap;
+}
+
+.app-sort-link.app-sort-active {
+    font-weight: 600;
+}
+
+.app-sort-link.app-sort-asc::after {
+    content: "↑";
+    font-size: 0.85em;
+}
+
+.app-sort-link.app-sort-desc::after {
+    content: "↓";
+    font-size: 0.85em;
 }

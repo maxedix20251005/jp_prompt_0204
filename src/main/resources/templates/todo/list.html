@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
@@ -14,7 +14,12 @@
     <div class="container app-container py-3 d-flex align-items-center justify-content-between">
         <h1 class="app-title">ToDo</h1>
         <div class="app-actions">
-            <a class="btn btn-outline-secondary" th:href="@{/todos/overdue}">期限切れ</a>
+            <a class="btn btn-outline-secondary"
+               th:if="${overdueMode}"
+               th:href="@{/todos(${queryParams},page=0,size=${pageSize},sort=${sort},dir=${dir})}">一覧</a>
+            <a class="btn btn-outline-secondary"
+               th:if="${!overdueMode}"
+               th:href="@{/todos/overdue(${queryParams},page=0,size=${pageSize},sort=${sort},dir=${dir})}">期限切れ</a>
             <a class="btn btn-primary" th:href="@{/todos/new}">+ 新規作成</a>
         </div>
     </div>
@@ -23,25 +28,79 @@
 <main class="container app-container app-section">
     <div class="alert alert-success alert-dismissible fade show" role="alert"
          th:if="${successMessage}" th:text="${successMessage}">
-        ToDoを削除しました
+        登録が完了しました
     </div>
     <div class="alert alert-danger alert-dismissible fade show" role="alert"
          th:if="${errorMessage}" th:text="${errorMessage}">
-        削除に失敗しました
+        エラーが発生しました
     </div>
+
     <div class="app-card">
         <div class="app-card-body">
-            <h2 class="app-title mb-3">一覧</h2>
+            <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+                <h2 class="app-list-title mb-0 text-center flex-grow-1">一覧</h2>
+                <form method="get" th:action="${overdueMode} ? @{/todos/overdue} : @{/todos}">
+                    <input type="hidden" name="page" value="0" />
+                    <input type="hidden" name="sort" th:if="${sort}" th:value="${sort}" />
+                    <input type="hidden" name="dir" th:if="${dir}" th:value="${dir}" />
+                    <input type="hidden" th:each="entry : ${queryParams}" th:name="${entry.key}" th:value="${entry.value}" />
+                    <div class="input-group input-group-sm">
+                        <label class="input-group-text" for="size">表示件数</label>
+                        <select class="form-select" id="size" name="size" onchange="this.form.submit()">
+                            <option value="5" th:selected="${pageSize == 5}">5</option>
+                            <option value="10" th:selected="${pageSize == 10}">10</option>
+                            <option value="20" th:selected="${pageSize == 20}">20</option>
+                            <option value="50" th:selected="${pageSize == 50}">50</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+
+            <p class="text-muted mb-3" th:if="${totalElements != null}">
+                全<span th:text="${totalElements}">0</span>件中
+                <span th:text="${rangeStart}">0</span>-<span th:text="${rangeEnd}">0</span>件を表示
+            </p>
+
             <div class="table-responsive">
                 <table class="table table-striped align-middle mb-0">
                     <thead>
                     <tr>
-                        <th scope="col">タイトル</th>
-                        <th scope="col">説明</th>
-                        <th scope="col">期限日</th>
-                        <th scope="col">優先度</th>
-                        <th scope="col">作成者</th>
-                        <th scope="col">完了</th>
+                        <th scope="col" class="text-center app-col-title">
+                            <a class="text-decoration-none text-body app-sort-link"
+                               th:classappend="${sort == 'title'} ? (dir == 'asc' ? 'app-sort-asc app-sort-active' : 'app-sort-desc app-sort-active') : ''"
+                               th:href="${overdueMode} ? @{/todos/overdue(${queryParams},sort='title',dir=${(sort=='title' and dir=='asc') ? 'desc' : 'asc'},page=0,size=${pageSize})} : @{/todos(${queryParams},sort='title',dir=${(sort=='title' and dir=='asc') ? 'desc' : 'asc'},page=0,size=${pageSize})}">
+                                タイトル
+                            </a>
+                        </th>
+                        <th scope="col" class="text-center app-col-desc">説明</th>
+                        <th scope="col" class="text-center app-col-due">
+                            <a class="text-decoration-none text-body app-sort-link"
+                               th:classappend="${sort == 'dueDate'} ? (dir == 'asc' ? 'app-sort-asc app-sort-active' : 'app-sort-desc app-sort-active') : ''"
+                               th:href="${overdueMode} ? @{/todos/overdue(${queryParams},sort='dueDate',dir=${(sort=='dueDate' and dir=='asc') ? 'desc' : 'asc'},page=0,size=${pageSize})} : @{/todos(${queryParams},sort='dueDate',dir=${(sort=='dueDate' and dir=='asc') ? 'desc' : 'asc'},page=0,size=${pageSize})}">
+                                期限日
+                            </a>
+                        </th>
+                        <th scope="col" class="text-center app-col-priority">
+                            <a class="text-decoration-none text-body app-sort-link"
+                               th:classappend="${sort == 'priority'} ? (dir == 'asc' ? 'app-sort-asc app-sort-active' : 'app-sort-desc app-sort-active') : ''"
+                               th:href="${overdueMode} ? @{/todos/overdue(${queryParams},sort='priority',dir=${(sort=='priority' and dir=='asc') ? 'desc' : 'asc'},page=0,size=${pageSize})} : @{/todos(${queryParams},sort='priority',dir=${(sort=='priority' and dir=='asc') ? 'desc' : 'asc'},page=0,size=${pageSize})}">
+                                優先度
+                            </a>
+                        </th>
+                        <th scope="col" class="text-center app-col-author">
+                            <a class="text-decoration-none text-body app-sort-link"
+                               th:classappend="${sort == 'author'} ? (dir == 'asc' ? 'app-sort-asc app-sort-active' : 'app-sort-desc app-sort-active') : ''"
+                               th:href="${overdueMode} ? @{/todos/overdue(${queryParams},sort='author',dir=${(sort=='author' and dir=='asc') ? 'desc' : 'asc'},page=0,size=${pageSize})} : @{/todos(${queryParams},sort='author',dir=${(sort=='author' and dir=='asc') ? 'desc' : 'asc'},page=0,size=${pageSize})}">
+                                作成者
+                            </a>
+                        </th>
+                        <th scope="col" class="text-center app-col-status">
+                            <a class="text-decoration-none text-body app-sort-link"
+                               th:classappend="${sort == 'completed'} ? (dir == 'asc' ? 'app-sort-asc app-sort-active' : 'app-sort-desc app-sort-active') : ''"
+                               th:href="${overdueMode} ? @{/todos/overdue(${queryParams},sort='completed',dir=${(sort=='completed' and dir=='asc') ? 'desc' : 'asc'},page=0,size=${pageSize})} : @{/todos(${queryParams},sort='completed',dir=${(sort=='completed' and dir=='asc') ? 'desc' : 'asc'},page=0,size=${pageSize})}">
+                                完了
+                            </a>
+                        </th>
                         <th scope="col" class="text-end">操作</th>
                     </tr>
                     </thead>
@@ -71,14 +130,14 @@
                             <a class="btn btn-outline-secondary btn-sm" th:href="@{/todos/{id}(id=${todo.id})}">詳細</a>
                             <a class="btn btn-outline-primary btn-sm" th:href="@{/todos/{id}/edit(id=${todo.id})}">編集</a>
                             <span class="app-table-actions">
-                            <form th:action="@{/todos/{id}/toggle(id=${todo.id})}" method="post"
-                                  class="d-inline todo-toggle-form" data-ajax="true">
-                                <button class="btn btn-outline-success btn-sm" type="submit">切替</button>
-                            </form>
-                            <form th:action="@{/todos/{id}/delete(id=${todo.id})}" method="post" class="d-inline"
-                                  onsubmit="return confirm('本当に削除しますか？');">
-                                <button class="btn btn-outline-danger btn-sm" type="submit">削除</button>
-                            </form>
+                                <form th:action="@{/todos/{id}/toggle(id=${todo.id})}" method="post"
+                                      class="d-inline todo-toggle-form" data-ajax="true">
+                                    <button class="btn btn-outline-success btn-sm" type="submit">切替</button>
+                                </form>
+                                <form th:action="@{/todos/{id}/delete(id=${todo.id})}" method="post" class="d-inline"
+                                      onsubmit="return confirm('本当に削除しますか？');">
+                                    <button class="btn btn-outline-danger btn-sm" type="submit">削除</button>
+                                </form>
                             </span>
                         </td>
                     </tr>
@@ -87,6 +146,32 @@
             </div>
         </div>
     </div>
+
+    <nav class="mt-3" th:if="${totalPages != null and totalPages > 1}">
+        <ul class="pagination justify-content-center mb-0">
+            <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                <a class="page-link"
+                   th:href="${overdueMode} ? @{/todos/overdue(${queryParams},page=${currentPage-1},size=${pageSize},sort=${sort},dir=${dir})} : @{/todos(${queryParams},page=${currentPage-1},size=${pageSize},sort=${sort},dir=${dir})}">
+                    前へ
+                </a>
+            </li>
+            <li class="page-item"
+                th:each="i : ${#numbers.sequence(0, totalPages-1)}"
+                th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link"
+                   th:href="${overdueMode} ? @{/todos/overdue(${queryParams},page=${i},size=${pageSize},sort=${sort},dir=${dir})} : @{/todos(${queryParams},page=${i},size=${pageSize},sort=${sort},dir=${dir})}"
+                   th:text="${i + 1}">
+                    1
+                </a>
+            </li>
+            <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                <a class="page-link"
+                   th:href="${overdueMode} ? @{/todos/overdue(${queryParams},page=${currentPage+1},size=${pageSize},sort=${sort},dir=${dir})} : @{/todos(${queryParams},page=${currentPage+1},size=${pageSize},sort=${sort},dir=${dir})}">
+                    次へ
+                </a>
+            </li>
+        </ul>
+    </nav>
 </main>
 
 <footer class="app-footer">

@@ -9,6 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.web.bind.annotation.RequestParam;
 import java.time.LocalDate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,8 +54,18 @@ public class TodoController {
      * @return 一覧テンプレート名
      */
     @GetMapping({"/todos", "/todos/"})
-    public String list(Model model) {
-        model.addAttribute("todos", todoService.findAllOrderByCreatedAtDesc());
+    public String list(@PageableDefault(size = 10) Pageable pageable,
+                       @RequestParam(required = false) java.util.Map<String, String> params,
+                       @RequestParam(required = false) String sort,
+                       @RequestParam(required = false) String dir,
+                       Model model) {
+        Page<Todo> page = todoService.findPageByMyBatis(pageable, sort, dir);
+        applyPagingModel(model, page, pageable);
+        model.addAttribute("todos", page.getContent());
+        model.addAttribute("queryParams", sanitizeQueryParams(params));
+        model.addAttribute("sort", sort);
+        model.addAttribute("dir", dir);
+        model.addAttribute("overdueMode", false);
         return "todo/list";
     }
 
@@ -62,10 +76,44 @@ public class TodoController {
      * @return 一覧テンプレート名
      */
     @GetMapping("/todos/overdue")
-    public String overdue(Model model) {
-        model.addAttribute("todos", todoService.findOverdueByMyBatis(LocalDate.now()));
+    public String overdue(@PageableDefault(size = 10) Pageable pageable,
+                          @RequestParam(required = false) java.util.Map<String, String> params,
+                          @RequestParam(required = false) String sort,
+                          @RequestParam(required = false) String dir,
+                          Model model) {
+        Page<Todo> page = todoService.findOverduePageByMyBatis(LocalDate.now(), pageable, sort, dir);
+        applyPagingModel(model, page, pageable);
+        model.addAttribute("todos", page.getContent());
         model.addAttribute("overdueMode", true);
+        model.addAttribute("queryParams", sanitizeQueryParams(params));
+        model.addAttribute("sort", sort);
+        model.addAttribute("dir", dir);
         return "todo/list";
+    }
+
+    private void applyPagingModel(Model model, Page<Todo> page, Pageable pageable) {
+        model.addAttribute("page", page);
+        model.addAttribute("currentPage", page.getNumber());
+        model.addAttribute("totalPages", page.getTotalPages());
+        long total = page.getTotalElements();
+        long start = total == 0 ? 0 : pageable.getOffset() + 1;
+        long end = Math.min(pageable.getOffset() + page.getNumberOfElements(), total);
+        model.addAttribute("totalElements", total);
+        model.addAttribute("rangeStart", start);
+        model.addAttribute("rangeEnd", end);
+        model.addAttribute("pageSize", pageable.getPageSize());
+    }
+
+    private java.util.Map<String, String> sanitizeQueryParams(java.util.Map<String, String> params) {
+        if (params == null || params.isEmpty()) {
+            return java.util.Collections.emptyMap();
+        }
+        java.util.Map<String, String> cleaned = new java.util.LinkedHashMap<>(params);
+        cleaned.remove("page");
+        cleaned.remove("size");
+        cleaned.remove("sort");
+        cleaned.remove("dir");
+        return cleaned;
     }
 
     /**

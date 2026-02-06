@@ -1,8 +1,12 @@
 package com.example.todo.service;
 
 import java.util.List;
+import java.util.Collections;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.todo.entity.Todo;
@@ -42,6 +46,77 @@ public class TodoService implements TodoServiceUseCase {
     @Override
     public List<Todo> findAllOrderByCreatedAtDesc() {
         return todoRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+    }
+
+    /**
+     * MyBatisでページング取得します。
+     *
+     * @param pageable ページ情報
+     * @return ページング結果
+     */
+    public Page<Todo> findPageByMyBatis(Pageable pageable, String sort, String dir) {
+        if (pageable == null) {
+            return Page.empty();
+        }
+        String sortColumn = mapSortColumn(sort);
+        String sortDir = mapSortDir(dir);
+        long total = todoMapper.countAll();
+        if (total == 0) {
+            return new PageImpl<>(Collections.emptyList(), pageable, 0);
+        }
+        int limit = pageable.getPageSize();
+        int offset = (int) pageable.getOffset();
+        List<Todo> items = todoMapper.selectPage(limit, offset, sortColumn, sortDir);
+        return new PageImpl<>(items, pageable, total);
+    }
+
+    /**
+     * MyBatisで期限切れToDoをページング取得します。
+     *
+     * @param date 期限日（この日付以前が対象）
+     * @param pageable ページ情報
+     * @return ページング結果
+     */
+    public Page<Todo> findOverduePageByMyBatis(java.time.LocalDate date, Pageable pageable, String sort, String dir) {
+        if (pageable == null) {
+            return Page.empty();
+        }
+        String sortColumn = mapSortColumn(sort);
+        String sortDir = mapSortDir(dir);
+        long total = todoMapper.countOverdue(date);
+        if (total == 0) {
+            return new PageImpl<>(Collections.emptyList(), pageable, 0);
+        }
+        int limit = pageable.getPageSize();
+        int offset = (int) pageable.getOffset();
+        List<Todo> items = todoMapper.selectOverduePage(date, limit, offset, sortColumn, sortDir);
+        return new PageImpl<>(items, pageable, total);
+    }
+
+    private String mapSortColumn(String sort) {
+        if ("title".equals(sort)) {
+            return "title";
+        }
+        if ("dueDate".equals(sort)) {
+            return "due_date";
+        }
+        if ("priority".equals(sort)) {
+            return "priority";
+        }
+        if ("author".equals(sort)) {
+            return "author";
+        }
+        if ("completed".equals(sort)) {
+            return "completed";
+        }
+        return "created_at";
+    }
+
+    private String mapSortDir(String dir) {
+        if ("asc".equalsIgnoreCase(dir)) {
+            return "ASC";
+        }
+        return "DESC";
     }
 
     /**
