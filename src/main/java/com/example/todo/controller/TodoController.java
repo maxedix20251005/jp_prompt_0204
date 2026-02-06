@@ -69,6 +69,11 @@ public class TodoController {
         return "todo/list";
     }
 
+    @GetMapping("/")
+    public String root() {
+        return "redirect:/todos";
+    }
+
     /**
      * 期限切れのToDo一覧（MyBatis）を表示します。
      *

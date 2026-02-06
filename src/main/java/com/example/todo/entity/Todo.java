@@ -114,4 +114,29 @@ public class Todo {
             completed = false;
         }
     }
+
+    /**
+     * 期限切れ判定。
+     *
+     * @return 期限日が今日より前の場合はtrue
+     */
+    public boolean isOverdue() {
+        if (dueDate == null) {
+            return false;
+        }
+        return dueDate.isBefore(LocalDate.now());
+    }
+
+    /**
+     * 期限が近いか判定（今日〜3日以内、かつ期限切れではない）。
+     *
+     * @return 期限が近い場合はtrue
+     */
+    public boolean isNearDeadline() {
+        if (dueDate == null) {
+            return false;
+        }
+        LocalDate today = LocalDate.now();
+        return !dueDate.isBefore(today) && !dueDate.isAfter(today.plusDays(3));
+    }
 }

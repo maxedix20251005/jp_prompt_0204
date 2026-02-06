@@ -12,7 +12,10 @@
 <body class="app-page">
 <header class="app-header">
     <div class="container app-container py-3 d-flex align-items-center justify-content-between">
-        <h1 class="app-title">ToDo</h1>
+        <h1 class="app-title">
+            <span class="app-logo" aria-hidden="true"></span>
+            TO DO LIST
+        </h1>
         <div class="app-actions">
             <a class="btn btn-outline-secondary"
                th:if="${overdueMode}"
@@ -38,7 +41,7 @@
     <div class="app-card">
         <div class="app-card-body">
             <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
-                <h2 class="app-list-title mb-0 text-center flex-grow-1">一覧</h2>
+                <h2 class="app-list-title mb-0 text-center flex-grow-1">TO DO Item 一覧</h2>
                 <form method="get" th:action="${overdueMode} ? @{/todos/overdue} : @{/todos}">
                     <input type="hidden" name="page" value="0" />
                     <input type="hidden" name="sort" th:if="${sort}" th:value="${sort}" />
@@ -105,7 +108,9 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="todo : ${todos}" th:attr="data-id=${todo.id}">
+                    <tr th:each="todo : ${todos}"
+                        th:attr="data-id=${todo.id}"
+                        th:classappend="${todo.overdue} ? 'overdue-row' : (${todo.nearDeadline} ? 'warning-row' : '')">
                         <td>
                             <span class="todo-title"
                                   th:text="${todo.title}"
